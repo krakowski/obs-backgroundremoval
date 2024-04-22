@@ -1,48 +1,41 @@
 include(FetchContent)
 
-set(CUSTOM_ONNXRUNTIME_URL
-    ""
-    CACHE STRING "URL of a downloaded ONNX Runtime tarball")
-
-set(CUSTOM_ONNXRUNTIME_HASH
-    ""
-    CACHE STRING "Hash of a downloaded ONNX Runtime tarball")
-
+# Default ONNX Runtime version
 set(Onnxruntime_VERSION "1.17.1")
 
-if(CUSTOM_ONNXRUNTIME_URL STREQUAL "")
-  set(USE_PREDEFINED_ONNXRUNTIME ON)
+# Define Windows-specific helper variables
+set(Onnxruntime_BASEURL "https://github.com/microsoft/onnxruntime/releases/download/v${Onnxruntime_VERSION}")
+set(Onnxruntime_WINDOWS_VERSION "v${Onnxruntime_VERSION}-1")
+set(Onnxruntime_WINDOWS_BASEURL
+    "https://github.com/occ-ai/occ-ai-dep-onnxruntime-static-win/releases/download/${Onnxruntime_WINDOWS_VERSION}")
+
+# Choose right url and hash depending on host operating system
+if(APPLE)
+  set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-osx-universal2-${Onnxruntime_VERSION}.tgz")
+  set(Onnxruntime_HASH SHA256=9FA57FA6F202A373599377EF75064AE568FDA8DA838632B26A86024C7378D306)
+elseif(MSVC)
+  set(Onnxruntime_URL "${Onnxruntime_WINDOWS_BASEURL}/onnxruntime-windows-${Onnxruntime_WINDOWS_VERSION}-Release.zip")
+  set(OOnnxruntime_HASH SHA256=39E63850D9762810161AE1B4DEAE5E3C02363521273E4B894A9D9707AB626C38)
 else()
-  if(CUSTOM_ONNXRUNTIME_HASH STREQUAL "")
-    message(FATAL_ERROR "Both of CUSTOM_ONNXRUNTIME_URL and CUSTOM_ONNXRUNTIME_HASH must be present!")
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-aarch64-${Onnxruntime_VERSION}.tgz")
+    set(Onnxruntime_HASH SHA256=70B6F536BB7AB5961D128E9DBD192368AC1513BFFB74FE92F97AAC342FBD0AC1)
   else()
-    set(USE_PREDEFINED_ONNXRUNTIME OFF)
+    set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-x64-gpu-${Onnxruntime_VERSION}.tgz")
+    set(Onnxruntime_HASH SHA256=613C53745EA4960ED368F6B3AB673558BB8561C84A8FA781B4EA7FB4A4340BE4)
   endif()
 endif()
 
-if(USE_PREDEFINED_ONNXRUNTIME)
-  set(Onnxruntime_BASEURL "https://github.com/microsoft/onnxruntime/releases/download/v${Onnxruntime_VERSION}")
-  set(Onnxruntime_WINDOWS_VERSION "v${Onnxruntime_VERSION}-1")
-  set(Onnxruntime_WINDOWS_BASEURL
-      "https://github.com/occ-ai/occ-ai-dep-onnxruntime-static-win/releases/download/${Onnxruntime_WINDOWS_VERSION}")
+# Let the user override the ONNX Runtime variables
+if (DEFINED CUSTOM_ONNXRUNTIME_VERSION)
+  set(Onnxruntime_VERSION "${CUSTOM_ONNXRUNTIME_VERSION}")
+endif()
 
-  if(APPLE)
-    set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-osx-universal2-${Onnxruntime_VERSION}.tgz")
-    set(Onnxruntime_HASH SHA256=9FA57FA6F202A373599377EF75064AE568FDA8DA838632B26A86024C7378D306)
-  elseif(MSVC)
-    set(Onnxruntime_URL "${Onnxruntime_WINDOWS_BASEURL}/onnxruntime-windows-${Onnxruntime_WINDOWS_VERSION}-Release.zip")
-    set(OOnnxruntime_HASH SHA256=39E63850D9762810161AE1B4DEAE5E3C02363521273E4B894A9D9707AB626C38)
-  else()
-    if(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
-      set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-aarch64-${Onnxruntime_VERSION}.tgz")
-      set(Onnxruntime_HASH SHA256=70B6F536BB7AB5961D128E9DBD192368AC1513BFFB74FE92F97AAC342FBD0AC1)
-    else()
-      set(Onnxruntime_URL "${Onnxruntime_BASEURL}/onnxruntime-linux-x64-gpu-${Onnxruntime_VERSION}.tgz")
-      set(Onnxruntime_HASH SHA256=613C53745EA4960ED368F6B3AB673558BB8561C84A8FA781B4EA7FB4A4340BE4)
-    endif()
-  endif()
-else()
+if (DEFINED CUSTOM_ONNXRUNTIME_URL)
   set(Onnxruntime_URL "${CUSTOM_ONNXRUNTIME_URL}")
+endif()
+
+if (DEFINED CUSTOM_ONNXRUNTIME_HASH)
   set(Onnxruntime_HASH "${CUSTOM_ONNXRUNTIME_HASH}")
 endif()
 
